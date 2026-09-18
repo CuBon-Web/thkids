@@ -1,0 +1,117 @@
+/**
+ * Google Translate language switcher (gt-lang)
+ * Reusable with google-translate-lang.js + #google_translate_element
+ */
+
+/* Hide Google default UI & top bar */
+body {
+    top: 0 !important;
+}
+
+.skiptranslate,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+iframe.goog-te-banner-frame {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+}
+
+#google_translate_element,
+.goog-te-gadget {
+    display: none !important;
+}
+
+.gt-lang {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgb(16 16 16 / 64%);
+    backdrop-filter: blur(6px);
+}
+
+.theme-style--light .header:not(.color-fixed) .gt-lang,
+.header.color-fixed .gt-lang {
+    background: rgba(250, 247, 244, 0.92);
+    border-color: rgba(233, 223, 216, 0.95);
+}
+
+.gt-lang__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 23px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    cursor: pointer;
+    color: rgb(0 0 0);
+    background: transparent;
+    transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.theme-style--light .header:not(.color-fixed) .gt-lang__btn,
+.header.color-fixed .gt-lang__btn {
+    color: #8c8178;
+}
+
+.gt-lang__btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-style--light .header:not(.color-fixed) .gt-lang__btn:hover,
+.header.color-fixed .gt-lang__btn:hover {
+    color: #3a3330;
+    background: rgba(185, 8, 8, 0.08);
+}
+
+.gt-lang__btn.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, #ca232a 0%, #f85f65 100%);
+    box-shadow: 0 4px 14px rgba(185, 8, 8, 0.28);
+}
+
+.theme-style--light .header:not(.color-fixed) .gt-lang__btn.is-active,
+.header.color-fixed .gt-lang__btn.is-active {
+    color: #fff;
+}
+
+.gt-lang__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(185, 8, 8, 0.25);
+}
+
+.gt-lang__icon {
+    font-size: 14px;
+    margin-right: 5px;
+    opacity: 0.9;
+}
+
+.gt-lang.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+@media (max-width: 575px) {
+    .gt-lang__btn {
+        min-width: 34px;
+        padding: 0 10px;
+        font-size: 11px;
+    }
+
+    .gt-lang__icon {
+        display: none;
+    }
+}
