@@ -120,8 +120,8 @@ Hoàn tất đơn hàng của bạn
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-inner">
-                                        <label for="billingEmail">Email *</label>
-                                        <input type="email" id="billingEmail" name="billingEmail" required value="{{ old('billingEmail', $profile->email ?? '') }}" placeholder="Nhập email">
+                                        <label for="billingEmail">Email</label>
+                                        <input type="email" id="billingEmail" name="billingEmail" value="{{ old('billingEmail', $profile->email ?? '') }}" placeholder="Nhập email (không bắt buộc)">
                                     </div>
                                 </div>
                                 <div class="col-12">

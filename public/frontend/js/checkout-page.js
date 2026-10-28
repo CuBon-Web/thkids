@@ -263,7 +263,7 @@
                 var email = (document.getElementById('billingEmail') || {}).value || '';
                 var address = (document.getElementById('billingAddress') || {}).value || '';
 
-                if (!name.trim() || !phone.trim() || !email.trim() || !address.trim()) {
+                if (!name.trim() || !phone.trim() || !address.trim()) {
                     event.preventDefault();
                     showToast('Vui lòng điền đầy đủ thông tin nhận hàng', true);
                     return;
@@ -272,6 +272,12 @@
                 if (!/^0\d{8,10}$/.test(phone.replace(/[\s.-]/g, ''))) {
                     event.preventDefault();
                     showToast('Số điện thoại không hợp lệ', true);
+                    return;
+                }
+
+                if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                    event.preventDefault();
+                    showToast('Email không hợp lệ', true);
                     return;
                 }
 
