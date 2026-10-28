@@ -13,9 +13,77 @@ use App\Mail\DemoMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\models\website\Setting;
+use App\Jobs\SyncBillToKiotViet;
+use App\Services\Facebook\FacebookCapiService;
 
 class CartController extends Controller
 {
+    private function facebookRequestMeta(Request $request = null)
+    {
+        $request = $request ?: request();
+        return [
+            'client_ip_address' => $request->ip(),
+            'client_user_agent' => (string) $request->userAgent(),
+            'fbp' => $request->cookie('_fbp'),
+            'fbc' => $request->cookie('_fbc') ?: $request->input('fbclid'),
+            'event_source_url' => $request->fullUrl(),
+        ];
+    }
+
+    private function trackFacebookPurchase(Bill $bill, Request $request = null)
+    {
+        $request = $request ?: request();
+        $capi = app(FacebookCapiService::class);
+        $eventId = $capi->makeEventId('purchase_' . $bill->code_bill);
+
+        try {
+            $capi->sendPurchase($bill, $eventId, $this->facebookRequestMeta($request));
+        } catch (\Throwable $e) {
+            Log::error('Facebook CAPI purchase failed', [
+                'code_bill' => $bill->code_bill,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $contents = [];
+        $details = BillDetail::where('code_bill', $bill->code_bill)->get();
+        foreach ($details as $detail) {
+            $contents[] = [
+                'id' => (string) $detail->code_product,
+                'quantity' => (int) $detail->qty,
+                'item_price' => (float) $detail->price,
+            ];
+        }
+
+        return [
+            'event_id' => $eventId,
+            'value' => (float) $bill->total_money,
+            'currency' => 'VND',
+            'order_id' => (string) $bill->code_bill,
+            'contents' => $contents,
+            'num_items' => (int) $details->sum('qty'),
+        ];
+    }
+
+    private function dispatchKiotVietSync(Bill $bill)
+    {
+        if (!config('kiotviet.enabled')) {
+            return;
+        }
+
+        try {
+            $bill->kiotviet_sync_status = 'pending';
+            $bill->kiotviet_sync_error = null;
+            $bill->save();
+            SyncBillToKiotViet::dispatch($bill->id);
+        } catch (\Throwable $e) {
+            Log::error('KiotViet dispatch failed', [
+                'code_bill' => $bill->code_bill,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function getNotificationEmails()
     {
         $setting = Setting::first(['email']);
@@ -173,6 +241,8 @@ class CartController extends Controller
             $bill->statu = 1;
             $bill->save();
             $this->reduceProductQtyByBill($bill);
+            $this->dispatchKiotVietSync($bill);
+            $bill->fb_purchase = $this->trackFacebookPurchase($bill);
             $billDetails = BillDetail::where('code_bill', $bill->code_bill)->get()->toArray();
             $this->sendBillNotificationMail($bill, $billDetails);
         }
@@ -231,9 +301,14 @@ class CartController extends Controller
 
                 $this->reduceProductQtyByBill($query);
                 DB::commit();
+                $this->dispatchKiotVietSync($query);
+                $fbPurchase = $this->trackFacebookPurchase($query, $request);
                 $this->sendBillNotificationMail($query, $cart);
                 $request->session()->forget('cart');
-                return view('cart.orderSuccess');
+                return view('cart.orderSuccess', [
+                    'bill' => $query,
+                    'fbPurchase' => $fbPurchase,
+                ]);
 			} catch (\Throwable $e) {
 			    DB::rollBack();
                 Log::error('Checkout failed', ['error' => $e->getMessage()]);
@@ -249,7 +324,10 @@ class CartController extends Controller
             $bill = $this->markBillPaidByOrderCode($orderCode);
             if ($bill) {
                 session()->forget('cart');
-                return view('cart.orderSuccess');
+                return view('cart.orderSuccess', [
+                    'bill' => $bill,
+                    'fbPurchase' => $bill->fb_purchase ?? null,
+                ]);
             }
         }
         return redirect()->route('checkout')->with('error', 'Thanh toán chưa hoàn tất, vui lòng thử lại.');

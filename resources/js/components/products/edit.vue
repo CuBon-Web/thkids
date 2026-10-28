@@ -55,37 +55,28 @@
                     <div>
                       <vs-table :data="VariantSku">
                         <template slot="thead">
-                          <vs-th>
-                            Phiên bản
-                          </vs-th>
-                          <vs-th>
-                            Giá
-                          </vs-th>
-                          <vs-th>
-                            Số lượng
-                          </vs-th>
+                          <vs-th>Phiên bản</vs-th>
+                          <vs-th>Giá</vs-th>
+                          <vs-th>Số lượng</vs-th>
+                          <vs-th>Mã KiotViet</vs-th>
                         </template>
 
                         <template slot-scope="{data}">
                           <vs-tr :key="indextr" v-for="(tr, indextr) in VariantSku" >
+                            <vs-td>{{data[indextr].version}}</vs-td>
                             <vs-td>
-                              {{data[indextr].version}}
+                              <vs-input type="text" size="default" class="w-100" v-model="data[indextr].price" />
                             </vs-td>
-
                             <vs-td>
-                              <vs-input
-                                type="text"
-                                size="default"
-                                class="w-100"
-                                v-model="data[indextr].price"
-                              />
+                              <vs-input type="text" size="default" class="w-100" v-model="data[indextr].qty" />
                             </vs-td>
-                            <vs-td >
-                              <vs-input
+                            <vs-td>
+                              <input
                                 type="text"
-                                size="default"
-                                class="w-100"
-                                v-model="data[indextr].qty"
+                                class="w-100 form-control form-control-sm"
+                                placeholder="VD: 209-1"
+                                :value="data[indextr].kiotviet_code || ''"
+                                @input="$set(data[indextr], 'kiotviet_code', $event.target.value)"
                               />
                             </vs-td>
                           </vs-tr>
@@ -105,37 +96,28 @@
                     <div>
                       <vs-table :data="objData.lungtung">
                         <template slot="thead">
-                          <vs-th>
-                            Phiên bản
-                          </vs-th>
-                          <vs-th>
-                            Giá
-                          </vs-th>
-                          <vs-th>
-                            Số lượng
-                          </vs-th>
+                          <vs-th>Phiên bản</vs-th>
+                          <vs-th>Giá</vs-th>
+                          <vs-th>Số lượng</vs-th>
+                          <vs-th>Mã KiotViet</vs-th>
                         </template>
 
                         <template slot-scope="{data}">
                           <vs-tr :key="indextr" v-for="(tr, indextr) in objData.lungtung" >
+                            <vs-td>{{data[indextr].version}}</vs-td>
                             <vs-td>
-                              {{data[indextr].version}}
+                              <vs-input type="text" size="default" class="w-100" v-model="data[indextr].price" />
                             </vs-td>
-
                             <vs-td>
-                              <vs-input
-                                type="text"
-                                size="default"
-                                class="w-100"
-                                v-model="data[indextr].price"
-                              />
+                              <vs-input type="text" size="default" class="w-100" v-model="data[indextr].qty" />
                             </vs-td>
-                            <vs-td >
-                              <vs-input
+                            <vs-td>
+                              <input
                                 type="text"
-                                size="default"
-                                class="w-100"
-                                v-model="data[indextr].qty"
+                                class="w-100 form-control form-control-sm"
+                                placeholder="VD: 209-1"
+                                :value="data[indextr].kiotviet_code || ''"
+                                @input="$set(data[indextr], 'kiotviet_code', $event.target.value)"
                               />
                             </vs-td>
                           </vs-tr>
@@ -163,6 +145,16 @@
                   icon="all_inclusive"
                   class="w-100"
                   v-model="objData.discount"
+                />
+              </div>
+              <div class="form-group">
+                <label>Mã hàng KiotViet</label>
+                <vs-input
+                  type="text"
+                  size="default"
+                  class="w-100"
+                  placeholder="Mã code trên KiotViet (bắt buộc để đồng bộ đơn)"
+                  v-model="objData.kiotviet_code"
                 />
               </div>
             </div>
@@ -397,6 +389,7 @@ export default {
         ingredient:'',
         images: [],
         qty: "",
+        kiotviet_code: "",
         description: [
           {
             lang_code: "vi",

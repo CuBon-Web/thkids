@@ -165,7 +165,8 @@
                             <th>Tổ hợp</th>
                             <th width="120">Giá</th>
                             <th width="120">Số lượng</th>
-                            <th width="180">SKU</th>
+                            <th width="160">SKU</th>
+                            <th width="160">Mã KiotViet</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -194,7 +195,20 @@
                               />
                             </td>
                             <td>
-                              <vs-input type="text" class="w-100" v-model="objData.lungtung[index].sku" />
+                              <input
+                                type="text"
+                                class="w-100 form-control form-control-sm"
+                                v-model="objData.lungtung[index].sku"
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                class="w-100 form-control form-control-sm"
+                                placeholder="VD: 209-1"
+                                :value="objData.lungtung[index].kiotviet_code || ''"
+                                @input="setVariantText(index, 'kiotviet_code', $event)"
+                              />
                             </td>
                           </tr>
                         </tbody>
@@ -225,6 +239,17 @@
                   class="w-100"
                   v-model="objData.qty"
                 />
+              </div>
+              <div class="form-group">
+                <label>Mã hàng KiotViet (SP không biến thể)</label>
+                <vs-input
+                  type="text"
+                  size="default"
+                  placeholder="Mã code trên KiotViet"
+                  class="w-100"
+                  v-model="objData.kiotviet_code"
+                />
+                <small class="text-muted">SP có biến thể: điền mã ở từng dòng biến thể bên dưới.</small>
               </div>
               <div class="form-group">
                 <div class="compact-meta-box">
@@ -561,7 +586,8 @@ export default {
         preserve:[],
         ingredient:'',
         images: [],
-        qty: "",
+        qty: 100,
+        kiotviet_code: "",
         description: [
           {
             lang_code: "vi",
@@ -574,7 +600,6 @@ export default {
             content: "",
           },
         ],
-        qty:100,
         category: 0,
         status: 1,
         discountStatus:0,
@@ -936,6 +961,21 @@ export default {
       const normalized = this.normalizeDigits(inputValue);
       this.bulkVariant[field] = normalized === "" ? null : Number(normalized);
     },
+    setVariantText(index, field, payload) {
+      if (!this.objData.lungtung[index]) return;
+      const value = payload && payload.target ? payload.target.value : payload;
+      this.$set(this.objData.lungtung[index], field, value == null ? "" : String(value));
+    },
+    normalizeVariantRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map((row) => ({
+        ...row,
+        sku: row && row.sku != null ? String(row.sku) : "",
+        kiotviet_code: row && row.kiotviet_code != null ? String(row.kiotviet_code) : "",
+        version: row && row.version != null ? String(row.version) : "",
+        price: Number((row && row.price) || 0),
+        qty: Number((row && row.qty) || 0),
+      }));
+    },
     setVariantNumber(index, field, payload) {
       if (!this.objData.lungtung[index]) return;
       const inputValue = this.getInputValue(payload);
@@ -1185,6 +1225,7 @@ export default {
           price: Number(oldRow.price || 0),
           qty: Number(oldRow.qty || 0),
           sku: oldRow.sku || "",
+          kiotviet_code: oldRow.kiotviet_code || "",
           version,
           option_values: group.map((part) => ({
             option_id: part.valueId,
@@ -1226,6 +1267,7 @@ export default {
           price: Number(oldMap[item.version] ? oldMap[item.version].price : item.price || 0),
           qty: Number(oldMap[item.version] ? oldMap[item.version].qty : item.qty || 0),
           sku: oldMap[item.version] ? oldMap[item.version].sku || "" : item.sku || "",
+          kiotviet_code: oldMap[item.version] ? oldMap[item.version].kiotviet_code || "" : item.kiotviet_code || "",
         }));
       }
     },
@@ -1278,6 +1320,12 @@ export default {
         const payload = {
           ...this.objData,
           size: this.normalizeTechnicalSpecs(this.objData.size),
+          status_variant: this.variantstatus && this.objData.lungtung.length > 0 ? 1 : 0,
+          lungtung: (this.objData.lungtung || []).map((row) => ({
+            ...row,
+            kiotviet_code: row.kiotviet_code != null ? String(row.kiotviet_code).trim() : "",
+            sku: row.sku != null ? String(row.sku).trim() : "",
+          })),
           seo_title: this.seoData.seoTitle,
           meta_description: this.seoData.metaDescription,
           focus_keyword: this.seoData.focusKeyword,
@@ -1377,7 +1425,8 @@ export default {
           this.objData.description = JSON.parse(productResponse.data.description);
           this.objData.tags = JSON.parse(productResponse.data.tags);
           this.objData.variant = productResponse.data.variant ? JSON.parse(productResponse.data.variant) : [];
-          this.objData.lungtung = Array.isArray(skuResponse.data) ? skuResponse.data : [];
+          this.objData.kiotviet_code = productResponse.data.kiotviet_code || "";
+          this.objData.lungtung = this.normalizeVariantRows(skuResponse.data);
           if (productResponse.data.size == "") {
             this.objData.size = [{ title: "", detail: "" }];
           } else {

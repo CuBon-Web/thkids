@@ -168,7 +168,8 @@
                             <th>Tổ hợp</th>
                             <th width="120">Giá</th>
                             <th width="120">Số lượng</th>
-                            <th width="180">SKU</th>
+                            <th width="160">SKU</th>
+                            <th width="160">Mã KiotViet</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -197,7 +198,20 @@
                               />
                             </td>
                             <td>
-                              <vs-input type="text" class="w-100" v-model="objData.lungtung[index].sku" />
+                              <input
+                                type="text"
+                                class="w-100 form-control form-control-sm"
+                                v-model="objData.lungtung[index].sku"
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                class="w-100 form-control form-control-sm"
+                                placeholder="VD: 209-1"
+                                :value="objData.lungtung[index].kiotviet_code || ''"
+                                @input="setVariantText(index, 'kiotviet_code', $event)"
+                              />
                             </td>
                           </tr>
                         </tbody>
@@ -231,6 +245,17 @@
                   class="w-100"
                   v-model="objData.qty"
                 />
+              </div>
+              <div class="form-group">
+                <label>Mã hàng KiotViet (SP không biến thể)</label>
+                <vs-input
+                  type="text"
+                  size="default"
+                  placeholder="Mã code trên KiotViet"
+                  class="w-100"
+                  v-model="objData.kiotviet_code"
+                />
+                <small class="text-muted">SP có biến thể: điền mã ở từng dòng biến thể.</small>
               </div>
               <div class="form-group">
                 <div class="compact-meta-box">
@@ -567,7 +592,8 @@ export default {
         preserve:[],
         ingredient:'',
         images: [],
-        qty: "",
+        qty: 100,
+        kiotviet_code: "",
         description: [
           {
             lang_code: "vi",
@@ -582,7 +608,6 @@ export default {
         ],
         category: 0,
         status: 1,
-        qty:  100,
         discountStatus:0,
         type_cate: 0,
         type_two:0,
@@ -933,6 +958,11 @@ export default {
       const normalized = this.normalizeDigits(inputValue);
       this.bulkVariant[field] = normalized === "" ? null : Number(normalized);
     },
+    setVariantText(index, field, payload) {
+      if (!this.objData.lungtung[index]) return;
+      const value = payload && payload.target ? payload.target.value : payload;
+      this.$set(this.objData.lungtung[index], field, value == null ? "" : String(value));
+    },
     setVariantNumber(index, field, payload) {
       if (!this.objData.lungtung[index]) return;
       const inputValue = this.getInputValue(payload);
@@ -1182,6 +1212,7 @@ export default {
           price: Number(oldRow.price || 0),
           qty: Number(oldRow.qty || 0),
           sku: oldRow.sku || "",
+          kiotviet_code: oldRow.kiotviet_code || "",
           version,
           option_values: group.map((part) => ({
             option_id: part.valueId,

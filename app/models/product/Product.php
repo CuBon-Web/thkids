@@ -78,6 +78,9 @@ class Product extends Model
                     $query->ingredient = $request->ingredient;
                     $query->type_cate = $request->type_cate;
                     $query->qty = $request->qty;
+                    $query->kiotviet_code = $request->kiotviet_code !== null
+                        ? trim((string) $request->kiotviet_code)
+                        : $query->kiotviet_code;
                     // $query->species = json_encode($request->species);
                     $query->origin = $request->origin;
                     $query->thickness = $request->thickness;
@@ -89,8 +92,7 @@ class Product extends Model
                     $query->cate_build_pc = $request->cate_build_pc;
                     $query->service_id = $request->service_id;
                     $query->save();
-                    if($request->status_variant == 1){
-                        // dd($request->lungtung);
+                    if ((int) $request->status_variant === 1 && is_array($request->lungtung)) {
                         VariantSkuValue::where('product_id',$query->id)->delete();
                         foreach ($request->lungtung as $key => $val) {
                             $data = new VariantSkuValue();
@@ -98,7 +100,13 @@ class Product extends Model
                             $data->version = $val['version'];
                             $data->price = $val['price'];
                             $data->qty = $val['qty'];
-                            $data->sku = $query->slug.rand();
+                            $data->sku = !empty($val['sku']) ? $val['sku'] : ($query->slug . rand());
+                            $data->kiotviet_code = isset($val['kiotviet_code'])
+                                ? trim((string) $val['kiotviet_code'])
+                                : null;
+                            if ($data->kiotviet_code === '') {
+                                $data->kiotviet_code = null;
+                            }
                             $data->save();
                         }
                     }
@@ -133,19 +141,28 @@ class Product extends Model
                 $query->status_variant = $request->status_variant;
                 $query->hang_muc = $request->hang_muc;
                 $query->qty = $request->qty;
+                $query->kiotviet_code = $request->kiotviet_code !== null
+                    ? trim((string) $request->kiotviet_code)
+                    : null;
                 $query->status = $request->status;
                 $query->discountStatus = $request->discountStatus;
                 $query->home_status = $request->home_status;
                 $query->service_id = $request->service_id;
                 $query->save();
-                if($request->status_variant == 1){
+                if ((int) $request->status_variant === 1 && is_array($request->lungtung)) {
                 foreach ($request->lungtung as $key => $val) {
                     $data = new VariantSkuValue();
                     $data->product_id = $query->id;
                     $data->version = $val['version'];
                     $data->price = $val['price'];
                     $data->qty = $val['qty'];
-                    $data->sku = $query->slug.rand();
+                    $data->sku = !empty($val['sku']) ? $val['sku'] : ($query->slug . rand());
+                    $data->kiotviet_code = isset($val['kiotviet_code'])
+                        ? trim((string) $val['kiotviet_code'])
+                        : null;
+                    if ($data->kiotviet_code === '') {
+                        $data->kiotviet_code = null;
+                    }
                     $data->save();
                 }
                 }
