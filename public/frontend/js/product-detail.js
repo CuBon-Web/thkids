@@ -140,6 +140,7 @@
             var matched = statusVariant === 1 ? matchVariant(values) : null;
             var current = salePrice > 0 && (originalPrice <= 0 || salePrice < originalPrice) ? salePrice : originalPrice;
             var old = originalPrice;
+            var availableQty = Number(form.getAttribute('data-stock-qty') || 0);
 
             if (matched) {
                 var vSale = Number(matched.discount || matched.price || 0);
@@ -147,6 +148,7 @@
                 if (vSale > 0) current = vSale;
                 if (vOld > 0 && vOld > current) old = vOld;
                 else old = 0;
+                availableQty = Number(matched.qty || 0);
             }
 
             if (priceCurrent) priceCurrent.textContent = formatVnd(current);
@@ -160,6 +162,31 @@
             }
             form.setAttribute('data-current-price', String(current > 0 ? current : 0));
             form.setAttribute('data-current-variant', values.join(' / '));
+            form.setAttribute('data-available-qty', String(Math.max(0, availableQty)));
+
+            var stockStatus = document.getElementById('pd-stock-status');
+            var stockMessage = document.getElementById('pd-stock-message');
+            var qtyInput = form.querySelector('.pd-quantity-input');
+            var btnCart = form.querySelector('.pd-btn--cart');
+            var btnBuy = form.querySelector('.pd-btn--buy');
+            var inStock = availableQty > 0;
+
+            if (stockStatus) {
+                stockStatus.textContent = inStock ? 'Còn hàng' : 'Hết hàng';
+                stockStatus.style.color = inStock ? '#16a34a' : '#c8103d';
+            }
+            if (stockMessage) {
+                stockMessage.style.display = inStock ? 'none' : '';
+                stockMessage.textContent = inStock ? '' : 'Phân loại này đã hết hàng';
+            }
+            if (qtyInput) {
+                qtyInput.max = String(Math.max(1, availableQty || 1));
+                if (Number(qtyInput.value || 1) > availableQty && availableQty > 0) {
+                    qtyInput.value = String(availableQty);
+                }
+            }
+            if (btnCart) btnCart.disabled = !inStock;
+            if (btnBuy) btnBuy.disabled = !inStock;
         }
 
         form.querySelectorAll('.pd-variant-option input').forEach(function (input) {
@@ -238,6 +265,16 @@
 
             if (statusVariant === 1 && !variant) {
                 showCartToast('Vui lòng chọn phân loại sản phẩm', true);
+                return;
+            }
+
+            var availableQty = Number(form.getAttribute('data-available-qty') || form.getAttribute('data-stock-qty') || 0);
+            if (availableQty <= 0) {
+                showCartToast('Sản phẩm đã hết hàng', true);
+                return;
+            }
+            if (quantity > availableQty) {
+                showCartToast('Chỉ còn ' + availableQty + ' sản phẩm trong kho', true);
                 return;
             }
 

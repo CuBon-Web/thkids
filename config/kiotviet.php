@@ -10,4 +10,5 @@ return [
     'api_base' => env('KIOTVIET_API_BASE', 'https://public.kiotapi.com'),
     'token_cache_key' => 'kiotviet_access_token',
     'token_ttl' => 23 * 60 * 60,
+    'stock_sync_minutes' => env('KIOTVIET_STOCK_SYNC_MINUTES', 10),
 ];

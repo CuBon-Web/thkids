@@ -336,9 +336,20 @@ product
                      <a href="{{ $categoryUrl }}">{{ $cateName }}</a>
                   </div>
                   @endif
+                  @php
+                     $stockQty = (int) ($product->qty ?? 0);
+                     if ($hasVariants) {
+                        $stockQty = collect($variants ?? [])->sum(function ($v) {
+                            return max(0, (int) ($v['qty'] ?? 0));
+                        });
+                     }
+                     $isInStock = $stockQty > 0;
+                  @endphp
                   <div class="product-detail-meta__item">
                      <span class="product-detail-meta__label">Tình trạng:</span>
-                     <span style="color:#16a34a;font-weight:600;">Còn hàng</span>
+                     <span id="pd-stock-status" style="color:{{ $isInStock ? '#16a34a' : '#c8103d' }};font-weight:600;">
+                        {{ $isInStock ? 'Còn hàng' : 'Hết hàng' }}
+                     </span>
                   </div>
                </div>
 
@@ -349,6 +360,7 @@ product
                   data-status-variant="{{ (int) $product->status_variant }}"
                   data-original-price="{{ $originalPrice }}"
                   data-sale-price="{{ $salePrice }}"
+                  data-stock-qty="{{ (int) ($product->qty ?? 0) }}"
                   data-variants='@json($variants ?? [])'
                   data-variant-options='@json($variantOptions ?? [])'>
 
@@ -383,9 +395,12 @@ product
                   </div>
 
                   <div class="pd-actions">
-                     <button type="button" class="pd-btn pd-btn--cart"> Thêm vào giỏ hàng</button>
-                     <button type="button" class="pd-btn pd-btn--buy">Mua ngay</button>
+                     <button type="button" class="pd-btn pd-btn--cart" {{ $isInStock ? '' : 'disabled' }}>Thêm vào giỏ hàng</button>
+                     <button type="button" class="pd-btn pd-btn--buy" {{ $isInStock ? '' : 'disabled' }}>Mua ngay</button>
                   </div>
+                  <p id="pd-stock-message" class="pd-stock-message" style="{{ $isInStock ? 'display:none;' : '' }}margin:8px 0 0;color:#c8103d;font-size:1.35rem;">
+                     Sản phẩm tạm hết hàng
+                  </p>
                   <div class="description" style="margin-top: 20px;">
                      {!! languageName($product->description) !!}
                   </div>

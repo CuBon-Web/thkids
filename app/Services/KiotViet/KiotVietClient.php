@@ -69,6 +69,17 @@ class KiotVietClient
         return $this->get('/products', $query);
     }
 
+    public function getProductByCode($code, array $query = [])
+    {
+        $code = trim((string) $code);
+        if ($code === '') {
+            return null;
+        }
+
+        $query = array_merge(['includeInventory' => 'true'], $query);
+        return $this->get('/products/code/' . rawurlencode($code), $query);
+    }
+
     public function findCustomerByPhone($phone)
     {
         $phone = preg_replace('/\D+/', '', (string) $phone);

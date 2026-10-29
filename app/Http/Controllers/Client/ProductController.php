@@ -14,6 +14,7 @@ use Session;
 use App\models\tag\Tags;
 use App\models\tag\TagCate;
 use App\models\VariantSkuValue;
+use App\Services\KiotViet\StockSyncService;
 
 class ProductController extends Controller
 {
@@ -273,13 +274,14 @@ class ProductController extends Controller
         if ((int) $product->status_variant === 1) {
             $variantRows = VariantSkuValue::where('product_id', $product->id)
                 ->orderBy('id', 'ASC')
-                ->get(['id', 'version', 'price']);
+                ->get(['id', 'version', 'price', 'qty']);
 
             $variants = $variantRows->map(function ($row) {
                 return [
                     'id' => $row->id,
                     'version' => $row->version,
                     'price' => (float) $row->price,
+                    'qty' => max(0, (int) $row->qty),
                 ];
             })->values()->all();
 
@@ -325,7 +327,7 @@ class ProductController extends Controller
             'cate' => function ($query) {
                 $query->where('status',1)->limit(5)->select('id','name','avatar','slug'); 
             },
-        ])->where('slug', $id)->where('status', 1)->first(['id','name','images','type_cate','type_two','category','sku','discount','price','content','size','description','slug','preserve','status_variant','created_at','species','variant','cate_slug','type_slug','qty','preserve','seo_title','meta_description','focus_keyword']);
+        ])->where('slug', $id)->where('status', 1)->first(['id','name','images','type_cate','type_two','category','sku','discount','price','content','size','description','slug','preserve','status_variant','created_at','species','variant','cate_slug','type_slug','qty','preserve','seo_title','meta_description','focus_keyword','kiotviet_code']);
 
         if (!$data['product']) {
             abort(404);
@@ -340,6 +342,14 @@ class ProductController extends Controller
                 'type' => $correctType,
                 'id' => $data['product']->slug,
             ], 301);
+        }
+
+        // Cập nhật tồn từ KiotViet khi vào trang chi tiết (cache 2 phút).
+        try {
+            app(StockSyncService::class)->syncProduct($data['product']);
+            $data['product']->refresh();
+        } catch (\Throwable $e) {
+            // Không chặn xem sản phẩm nếu KV lỗi.
         }
 
         $variantData = $this->prepareProductVariants($data['product']);

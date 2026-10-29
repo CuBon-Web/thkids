@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use App\models\website\Setting;
 use App\Jobs\SyncBillToKiotViet;
 use App\Services\Facebook\FacebookCapiService;
+use App\Services\KiotViet\StockService;
 
 class CartController extends Controller
 {
@@ -147,17 +148,37 @@ class CartController extends Controller
 
     private function reduceProductQtyByBill(Bill $bill)
     {
+        $stock = app(StockService::class);
         $billDetails = BillDetail::where('code_bill', $bill->code_bill)->get();
         foreach ($billDetails as $detail) {
             $product = Product::find($detail->code_product);
-            if (!$product) continue;
-            if ($product->qty > $detail->qty) {
-                $product->qty = $product->qty - $detail->qty;
-            } else {
-                $product->qty = 0;
+            if (!$product) {
+                continue;
             }
-            $product->save();
+            $stock->reduceStock($product, (int) $detail->qty, (string) ($detail->variant ?? ''));
         }
+    }
+
+    private function validateCartStock(array $cart)
+    {
+        $stock = app(StockService::class);
+        foreach ($cart as $item) {
+            $product = Product::find($item['idpro'] ?? 0);
+            if (!$product) {
+                return 'Sản phẩm không tồn tại trong giỏ hàng';
+            }
+            $error = $stock->validateCartLine(
+                $product,
+                (int) ($item['quantity'] ?? 0),
+                (string) ($item['variant'] ?? '')
+            );
+            if ($error) {
+                $name = $item['name'] ?? 'Sản phẩm';
+                $variant = trim((string) ($item['variant'] ?? ''));
+                return $name . ($variant !== '' ? ' (' . $variant . ')' : '') . ': ' . $error;
+            }
+        }
+        return null;
     }
 
     private function buildPayosSignature(array $data, $checksumKey)
@@ -260,6 +281,11 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
         if (count($cart) === 0) {
             return redirect()->route('listCart')->with('error', 'Giỏ hàng đang trống');
+        }
+
+        $stockError = $this->validateCartStock($cart);
+        if ($stockError) {
+            return redirect()->route('listCart')->with('error', $stockError);
         }
 
         $code_bill = (int)(date('ymdHis') . rand(10, 99));
@@ -394,6 +420,23 @@ class CartController extends Controller
 
         $product = Product::findOrFail($request->product_id);
         $cart = session()->get('cart', []);
+        $variant = trim((string) $request->input('variant', ''));
+        $quantity = (int) $request->quantity;
+
+        $cartKey = (string) $request->product_id;
+        if ((int) $product->status_variant === 1 && $variant !== '') {
+            $cartKey = $request->product_id . '_' . md5($variant);
+        }
+
+        $existingQty = isset($cart[$cartKey]) ? (int) $cart[$cartKey]['quantity'] : 0;
+        $stock = app(StockService::class);
+        $stockError = $stock->validateCartLine($product, $existingQty + $quantity, $variant);
+        if ($stockError) {
+            return response()->json([
+                'success' => false,
+                'message' => $stockError,
+            ], 422);
+        }
 
         $price = (float) $request->input('price', 0);
         if ($price <= 0) {
@@ -406,14 +449,8 @@ class CartController extends Controller
             ? languageName($product->name)
             : (string) $product->name;
 
-        $cartKey = (string) $request->product_id;
-        $variant = trim((string) $request->input('variant', ''));
-        if ((int) $product->status_variant === 1 && $variant !== '') {
-            $cartKey = $request->product_id . '_' . md5($variant);
-        }
-
         if (isset($cart[$cartKey])) {
-            $cart[$cartKey]['quantity'] = (int) $cart[$cartKey]['quantity'] + (int) $request->quantity;
+            $cart[$cartKey]['quantity'] = $existingQty + $quantity;
             $cart[$cartKey]['price'] = $price;
             $cart[$cartKey]['variant'] = $variant;
         } else {
@@ -422,7 +459,7 @@ class CartController extends Controller
                 'cart_key' => $cartKey,
                 'name' => $productName,
                 'variant' => $variant,
-                'quantity' => (int) $request->quantity,
+                'quantity' => $quantity,
                 'price' => $price,
                 'status_variant' => (int) $product->status_variant,
                 'discount' => (float) $product->discount,
@@ -452,6 +489,20 @@ class CartController extends Controller
         }
 
         $quantity = max(1, (int) $request->quantity);
+        $product = Product::find($cart[$key]['idpro'] ?? 0);
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại'], 404);
+        }
+
+        $stockError = app(StockService::class)->validateCartLine(
+            $product,
+            $quantity,
+            (string) ($cart[$key]['variant'] ?? '')
+        );
+        if ($stockError) {
+            return response()->json(['success' => false, 'message' => $stockError], 422);
+        }
+
         $cart[$key]['quantity'] = $quantity;
         session()->put('cart', $cart);
 
