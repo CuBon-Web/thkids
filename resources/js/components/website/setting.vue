@@ -113,6 +113,26 @@
                     v-model="objData.GA"
                   />
                 </div>
+                <div class="form-group" style="border-top:1px solid #eee;padding-top:12px;margin-top:8px;">
+                  <label><strong>Facebook Pixel ID</strong></label>
+                  <vs-input
+                    type="text"
+                    size="default"
+                    class="w-100"
+                    placeholder="VD: 2225730044711426"
+                    v-model="objData.fb_pixel_id"
+                  />
+                  <small class="text-muted">Dùng chung cho Meta Pixel (trình duyệt) và Conversions API.</small>
+                </div>
+                <div class="form-group">
+                  <label><strong>Facebook CAPI Access Token</strong></label>
+                  <vs-textarea
+                    class="w-100"
+                    placeholder="Chuỗi token bắt đầu bằng EAA..."
+                    v-model="objData.fb_capi_token"
+                  />
+                  <small class="text-muted">Token từ Events Manager / System User. Không chia sẻ công khai.</small>
+                </div>
                 <div class="form-group">
                   <label>Iframe GG map</label>
                   <vs-input
@@ -186,6 +206,8 @@ export default {
             google : "",
             GA : "",
             fbPixel : "",
+            fb_pixel_id : "",
+            fb_capi_token : "",
             iframe_map : "",
             favicon : "",
             logo : "",

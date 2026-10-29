@@ -4,17 +4,46 @@ namespace App\Services\Facebook;
 
 use App\models\Bill\Bill;
 use App\models\Bill\BillDetail;
+use App\models\website\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class FacebookCapiService
 {
+    public static function pixelId()
+    {
+        try {
+            $setting = Setting::query()->first(['fb_pixel_id']);
+            if ($setting && trim((string) $setting->fb_pixel_id) !== '') {
+                return trim((string) $setting->fb_pixel_id);
+            }
+        } catch (\Throwable $e) {
+            // ignore during migrate / missing column
+        }
+
+        return (string) config('facebook.pixel_id');
+    }
+
+    public static function accessToken()
+    {
+        try {
+            $setting = Setting::query()->first(['fb_capi_token']);
+            if ($setting && trim((string) $setting->fb_capi_token) !== '') {
+                return trim((string) $setting->fb_capi_token);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return (string) config('facebook.access_token');
+    }
+
     public function isConfigured()
     {
         return (bool) config('facebook.enabled')
-            && config('facebook.pixel_id')
-            && config('facebook.access_token');
+            && static::pixelId()
+            && static::accessToken();
     }
 
     public function makeEventId($prefix = 'evt')
@@ -88,8 +117,8 @@ class FacebookCapiService
 
     protected function sendEvents(array $events)
     {
-        $pixelId = config('facebook.pixel_id');
-        $token = config('facebook.access_token');
+        $pixelId = static::pixelId();
+        $token = static::accessToken();
         $version = config('facebook.api_version', 'v21.0');
         $url = "https://graph.facebook.com/{$version}/{$pixelId}/events";
 

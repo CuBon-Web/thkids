@@ -31956,6 +31956,26 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -31976,6 +31996,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         google: "",
         GA: "",
         fbPixel: "",
+        fb_pixel_id: "",
+        fb_capi_token: "",
         iframe_map: "",
         favicon: "",
         logo: "",
@@ -353788,6 +353810,71 @@ var render = function() {
               _vm._v(" "),
               _c(
                 "div",
+                {
+                  staticClass: "form-group",
+                  staticStyle: {
+                    "border-top": "1px solid #eee",
+                    "padding-top": "12px",
+                    "margin-top": "8px"
+                  }
+                },
+                [
+                  _vm._m(0),
+                  _vm._v(" "),
+                  _c("vs-input", {
+                    staticClass: "w-100",
+                    attrs: {
+                      type: "text",
+                      size: "default",
+                      placeholder: "VD: 2225730044711426"
+                    },
+                    model: {
+                      value: _vm.objData.fb_pixel_id,
+                      callback: function($$v) {
+                        _vm.$set(_vm.objData, "fb_pixel_id", $$v)
+                      },
+                      expression: "objData.fb_pixel_id"
+                    }
+                  }),
+                  _vm._v(" "),
+                  _c("small", { staticClass: "text-muted" }, [
+                    _vm._v(
+                      "Dùng chung cho Meta Pixel (trình duyệt) và Conversions API."
+                    )
+                  ])
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "form-group" },
+                [
+                  _vm._m(1),
+                  _vm._v(" "),
+                  _c("vs-textarea", {
+                    staticClass: "w-100",
+                    attrs: { placeholder: "Chuỗi token bắt đầu bằng EAA..." },
+                    model: {
+                      value: _vm.objData.fb_capi_token,
+                      callback: function($$v) {
+                        _vm.$set(_vm.objData, "fb_capi_token", $$v)
+                      },
+                      expression: "objData.fb_capi_token"
+                    }
+                  }),
+                  _vm._v(" "),
+                  _c("small", { staticClass: "text-muted" }, [
+                    _vm._v(
+                      "Token từ Events Manager / System User. Không chia sẻ công khai."
+                    )
+                  ])
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "div",
                 { staticClass: "form-group" },
                 [
                   _c("label", [_vm._v("Iframe GG map")]),
@@ -353932,7 +354019,20 @@ var render = function() {
     ])
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("label", [_c("strong", [_vm._v("Facebook Pixel ID")])])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("label", [_c("strong", [_vm._v("Facebook CAPI Access Token")])])
+  }
+]
 render._withStripped = true
 
 

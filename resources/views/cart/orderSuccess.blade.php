@@ -236,7 +236,7 @@
     </section>
 
     @php
-        $pixelId = config('facebook.pixel_id');
+        $pixelId = \App\Services\Facebook\FacebookCapiService::pixelId();
         $fbPurchase = $fbPurchase ?? null;
     @endphp
     @if($pixelId)

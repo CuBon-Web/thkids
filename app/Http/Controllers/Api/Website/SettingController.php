@@ -35,6 +35,8 @@ class SettingController extends Controller
             $setting->google   = $request->google;
             $setting->GA = $request->GA;
             $setting->fbPixel  = $request->fbPixel;
+            $setting->fb_pixel_id = $request->fb_pixel_id;
+            $setting->fb_capi_token = $request->fb_capi_token;
 	    	$setting->iframe_map  = $request->iframe_map;
 	    	$setting->favicon  = $request->favicon;
 	    	$setting->logo  = $request->logo;
@@ -64,6 +66,8 @@ class SettingController extends Controller
             $setting->google   = $request->google;
             $setting->GA = $request->GA;
             $setting->fbPixel  = $request->fbPixel;
+            $setting->fb_pixel_id = $request->fb_pixel_id;
+            $setting->fb_capi_token = $request->fb_capi_token;
 	    	$setting->iframe_map  = $request->iframe_map;
 	    	$setting->favicon  = $request->favicon;
 	    	$setting->logo  = $request->logo;
